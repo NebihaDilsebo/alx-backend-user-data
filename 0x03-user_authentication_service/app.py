@@ -52,18 +52,32 @@ def login() -> str:
 
 
 @app.route('/sessions', methods=['DELETE'], strict_slashes=False)
-def logout() -> str:
-    """ DELETE /sessions
-      Return:
-        - message
-    """
+def logout():
+    # Get the session ID from the cookie
     session_id = request.cookies.get('session_id')
-    user = AUTH.get_user_from_session_id(session_id)
+
+    # Check if session ID is provided
+    if not session_id:
+        return jsonify({'error': 'Session ID is missing'}), 400
+
+    # Find the user with the provided session ID
+    user = find_user_by_session_id(session_id)
+
+    # Check if the user exists
     if user:
-        AUTH.destroy_session(user.id)
-        return redirect('/')
+        # Destroy the session
+        destroy_session(session_id)
+
+        # Redirect the user to the home page (GET /)
+        response = make_response(redirect('/'))
+
+        # Clear the session cookie
+        response.set_cookie('session_id', '', expires=0)
+
+        return response
     else:
-        abort(403)
+        # If the user does not exist, respond with a 403 HTTP status
+        return jsonify({'error': 'Unauthorized'}), 403
 
 
 @app.route('/profile', methods=['GET'], strict_slashes=False)
