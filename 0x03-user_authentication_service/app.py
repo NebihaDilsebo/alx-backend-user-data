@@ -53,7 +53,10 @@ def login() -> str:
 
 @app.route('/sessions', methods=['DELETE'], strict_slashes=False)
 def log_out():
-    """logout function to respond to the DELETE /sessions route.
+    """ DELETE /sessions
+      Return:
+        - message
+    """
     The request is expected to contain the session ID as a cookie
     with key 'session_id'.
     If the user exists destroy the session and redirect the user to GET /.
