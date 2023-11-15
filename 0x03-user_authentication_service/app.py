@@ -52,29 +52,19 @@ def login() -> str:
 
 
 @app.route('/sessions', methods=['DELETE'], strict_slashes=False)
-def log_out():
+def logout() -> str:
     """ DELETE /sessions
       Return:
         - message
     """
-    The request is expected to contain the session ID as a cookie
-    with key 'session_id'.
-    If the user exists destroy the session and redirect the user to GET /.
-    If the user does not exist, respond with a 403 HTTP status.
-    """
-    session_id = request.cookies.get("session_id", None)
-
-    if session_id is None:
-        abort(403)
-
+    session_id = request.cookies.get('session_id')
     user = AUTH.get_user_from_session_id(session_id)
-
-    if user is None:
+    if user:
+        AUTH.destroy_session(user.id)
+        return redirect('/')
+    else:
         abort(403)
 
-    AUTH.destroy_session(user.id)
-
-    return redirect('/')
 
 @app.route('/profile', methods=['GET'], strict_slashes=False)
 def profile() -> str:
