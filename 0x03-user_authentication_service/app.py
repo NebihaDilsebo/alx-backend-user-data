@@ -52,33 +52,26 @@ def login() -> str:
 
 
 @app.route('/sessions', methods=['DELETE'], strict_slashes=False)
-def logout():
-    # Get the session ID from the cookie
-    session_id = request.cookies.get('session_id')
+def log_out():
+    """logout function to respond to the DELETE /sessions route.
+    The request is expected to contain the session ID as a cookie
+    with key 'session_id'.
+    If the user exists destroy the session and redirect the user to GET /.
+    If the user does not exist, respond with a 403 HTTP status.
+    """
+    session_id = request.cookies.get("session_id", None)
 
-    # Check if session ID is provided
-    if not session_id:
-        return jsonify({'error': 'Session ID is missing'}), 400
+    if session_id is None:
+        abort(403)
 
-    # Find the user with the provided session ID
-    user = find_user_by_session_id(session_id)
+    user = AUTH.get_user_from_session_id(session_id)
 
-    # Check if the user exists
-    if user:
-        # Destroy the session
-        destroy_session(session_id)
+    if user is None:
+        abort(403)
 
-        # Redirect the user to the home page (GET /)
-        response = make_response(redirect('/'))
+    AUTH.destroy_session(user.id)
 
-        # Clear the session cookie
-        response.set_cookie('session_id', '', expires=0)
-
-        return response
-    else:
-        # If the user does not exist, respond with a 403 HTTP status
-        return jsonify({'error': 'Unauthorized'}), 403
-
+    return redirect('/')
 
 @app.route('/profile', methods=['GET'], strict_slashes=False)
 def profile() -> str:
